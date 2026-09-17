@@ -1,31 +1,32 @@
 import streamlit as st
 import time
+import os
+import re
 from dotenv import load_dotenv
 from utils.audio_processor import process_input
 from core.transcriber import transcribe_all
 from core.summarizer import summarize, generate_title
 from core.extractor import extract_action_items, extract_key_decisions, extract_questions
 from core.RAG_engine import build_rag_chain, ask_question
-import os
+
 load_dotenv()
+
 # ── Cookie setup for YouTube downloads on cloud ──────────────────────────
 cookies_content = os.getenv("YTDLP_COOKIES_CONTENT")
 if cookies_content:
-    # Agar TOML ne tabs ko spaces me convert kar diya ho, unhe wapas tabs me convert karo
     lines = []
     for line in cookies_content.strip().split("\n"):
         if line.startswith("#") or not line.strip():
             lines.append(line)
         else:
-            # multiple spaces ko tab se replace karo
-            import re
             fixed_line = re.sub(r' {2,}', '\t', line)
             lines.append(fixed_line)
     cookies_content = "\n".join(lines)
-    
+
     with open("/tmp/cookies.txt", "w") as f:
         f.write(cookies_content)
     os.environ["YTDLP_COOKIES_FILE"] = "/tmp/cookies.txt"
+
 # ─── Page Config ────────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="AI Video Assistant",
@@ -116,6 +117,35 @@ h1, h2, h3, h4, h5, h6 {
     letter-spacing: 0.2em;
     text-transform: uppercase;
     margin-top: 0.5rem;
+}
+
+/* ── Main Input Panel (new) ── */
+.input-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.75rem;
+    margin: 1.5rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.input-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
+.input-panel-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
 }
 
 /* ── Cards ── */
@@ -346,21 +376,13 @@ def render_step_bar(label: str, key: str, icon: str):
         <span>{icon} {label}</span>
     </div>""", unsafe_allow_html=True)
 
-# ─── Sidebar ────────────────────────────────────────────────────────────────────
+# ─── Sidebar (status only now) ──────────────────────────────────────────────────
 with st.sidebar:
     st.markdown('<div class="hero-title" style="font-size:1.6rem">🎬 AI<br>Video</div>', unsafe_allow_html=True)
     st.markdown('<div class="hero-sub">Meeting Intelligence</div>', unsafe_allow_html=True)
     st.markdown("---")
 
-    st.markdown('<span class="badge badge-purple">Input</span>', unsafe_allow_html=True)
-    source = st.text_input("YouTube URL or File Path", placeholder="https://youtube.com/watch?v=... or /path/to/file.mp4")
-
-    language = st.selectbox("Language", ["english", "hinglish"], index=0)
-
-    run_btn = st.button("⚡  Analyse", use_container_width=True)
-
     if st.session_state.pipeline_done:
-        st.markdown("---")
         st.markdown('<span class="badge badge-green">Pipeline Status</span>', unsafe_allow_html=True)
         for step, icon, label in [
             ("audio",      "🔊", "Audio Processing"),
@@ -371,16 +393,72 @@ with st.sidebar:
             ("rag",        "🧠", "RAG Engine"),
         ]:
             render_step_bar(label, step, icon)
+    else:
+        st.markdown('<div style="color:var(--text-muted);font-size:0.8rem">Paste a link on the main page to begin. Pipeline status will appear here once running.</div>', unsafe_allow_html=True)
 
 # ─── Main Area ──────────────────────────────────────────────────────────────────
 st.markdown('<div class="hero-title">AI Video Assistant</div>', unsafe_allow_html=True)
 st.markdown('<div class="hero-sub">Transcribe · Summarise · Chat with your meetings</div>', unsafe_allow_html=True)
+
+# ── Main Input Panel (moved from sidebar) ───────────────────────────────────────
+st.markdown('<div class="input-panel">', unsafe_allow_html=True)
+st.markdown('<div class="input-panel-label">📎 Choose how to provide your meeting/video</div>', unsafe_allow_html=True)
+
+input_mode = st.radio(
+    "Input method",
+    ["🔗 YouTube URL", "📁 Upload File"],
+    horizontal=True,
+    label_visibility="collapsed",
+)
+
+source = None
+uploaded_file = None
+
+if input_mode == "🔗 YouTube URL":
+    st.caption("Note: on cloud deployments, YouTube may block downloads from server IPs. If that happens, switch to Upload File instead.")
+    input_col1, input_col2, input_col3 = st.columns([4, 1.2, 1], gap="small")
+    with input_col1:
+        source = st.text_input(
+            "YouTube URL",
+            placeholder="https://youtube.com/watch?v=...",
+            label_visibility="collapsed",
+        )
+    with input_col2:
+        language = st.selectbox("Language", ["english", "hinglish"], index=0, label_visibility="collapsed")
+    with input_col3:
+        run_btn = st.button("⚡ Analyse", use_container_width=True)
+else:
+    input_col1, input_col2, input_col3 = st.columns([4, 1.2, 1], gap="small")
+    with input_col1:
+        uploaded_file = st.file_uploader(
+            "Upload audio/video file",
+            type=["mp4", "mp3", "wav", "m4a", "webm", "mov", "mkv"],
+            label_visibility="collapsed",
+        )
+    with input_col2:
+        language = st.selectbox("Language", ["english", "hinglish"], index=0, label_visibility="collapsed", key="lang_upload")
+    with input_col3:
+        run_btn = st.button("⚡ Analyse", use_container_width=True, key="run_upload")
+
+st.markdown('</div>', unsafe_allow_html=True)
 st.markdown("---")
 
 # ── Run Pipeline ────────────────────────────────────────────────────────────────
 if run_btn:
-    if not source.strip():
-        st.error("Please enter a YouTube URL or file path.")
+    if input_mode == "📁 Upload File":
+        if uploaded_file is None:
+            st.error("Please upload a file.")
+            source = None
+        else:
+            os.makedirs("uploads", exist_ok=True)
+            saved_path = os.path.join("uploads", uploaded_file.name)
+            with open(saved_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            source = saved_path
+
+    if not source or not str(source).strip():
+        if input_mode == "🔗 YouTube URL":
+            st.error("Please enter a YouTube URL.")
     else:
         st.session_state.pipeline_done = False
         st.session_state.result = None
@@ -524,10 +602,18 @@ if st.session_state.result:
             <div style="color:var(--text-muted);font-size:0.85rem">Ask anything about your meeting transcript</div>
         </div>""", unsafe_allow_html=True)
 
-    # Chat input
+    # Chat input — cleared after each send via dynamic key
+    if "chat_input_key" not in st.session_state:
+        st.session_state.chat_input_key = 0
+
     chat_col1, chat_col2 = st.columns([5, 1], gap="small")
     with chat_col1:
-        user_input = st.text_input("Your question", placeholder="What were the main decisions made?", label_visibility="collapsed")
+        user_input = st.text_input(
+            "Your question",
+            placeholder="What were the main decisions made?",
+            label_visibility="collapsed",
+            key=f"chat_input_{st.session_state.chat_input_key}",
+        )
     with chat_col2:
         send_btn = st.button("Send →", use_container_width=True)
 
@@ -536,6 +622,7 @@ if st.session_state.result:
             answer = ask_question(r["rag_chain"], user_input.strip())
         st.session_state.chat_history.append({"role": "user",      "content": user_input.strip()})
         st.session_state.chat_history.append({"role": "assistant", "content": answer})
+        st.session_state.chat_input_key += 1  # forces a fresh empty widget next render
         st.rerun()
 
     if st.session_state.chat_history:
@@ -546,13 +633,13 @@ if st.session_state.result:
 else:
     # Empty state
     st.markdown("""
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5rem 2rem;text-align:center">
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 2rem;text-align:center">
         <div style="font-size:4rem;margin-bottom:1rem">🎬</div>
         <div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:700;color:var(--text);margin-bottom:0.5rem">
             Ready to Analyse
         </div>
         <div style="color:var(--text-muted);font-size:0.85rem;max-width:380px;line-height:1.7">
-            Paste a YouTube URL or local file path in the sidebar, choose your language, and hit <strong>Analyse</strong> to get started.
+            Paste a YouTube URL or upload a file above, choose your language, and hit <strong>Analyse</strong> to get started.
         </div>
         <div style="margin-top:2rem;display:flex;gap:1rem;flex-wrap:wrap;justify-content:center">
             <span class="badge badge-purple">Transcription</span>
