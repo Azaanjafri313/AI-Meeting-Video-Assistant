@@ -26,7 +26,7 @@ def build_chain(system_prompt :str):
 
 def extract_action_items(transcript:str)->str:
     chain=build_chain(
-        """You are an expert meeting and content analyst. From the meeting transcript,
+        """You are an expert meeting and content analyst. From the meeting or content transcript,
         extract all action items. for each provide:
         -Task description 
         - Owner (who is responsible)
