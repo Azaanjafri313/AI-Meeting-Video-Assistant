@@ -35,9 +35,9 @@ def summarize(transcript: str) -> str:
             [
                 (
                     "system",
-                    """You are an expert meeting summarizer.
+                    """You are an expert content summarizer.
 
-Summarize the meeting transcript professionally.
+Summarize the following transcript professionally.
 
 Focus on:
 - Main topics discussed
@@ -65,7 +65,7 @@ Do not invent information that is not present in the transcript."""
         [
             (
                 "system",
-                """Summarize this portion of a meeting transcript.
+                """Summarize this portion of a content transcript.
 
 Extract only important information such as:
 - Topics discussed
@@ -103,23 +103,19 @@ Do not invent information."""
         [
             (
                 "system",
-                """You are an expert meeting summarizer.
+                """You are an expert content summarizer.
 
-Combine the provided partial summaries into one professional
-meeting summary.
+Summarize the following transcript professionally.
 
 Focus on:
-- Main topics
-- Important discussion points
-- Decisions
+- Main topics discussed
+- Important points
 - Conclusions
 - Important details
 
-Remove repetition.
+Return the summary using clear bullet points.
 
-Do not add information that is not present.
-
-Return the final answer using clear bullet points."""
+Do not invent information that is not present in the transcript."""
             ),
             ("human", "{text}")
         ]
@@ -140,8 +136,8 @@ def generate_title(transcript: str) -> str:
         [
             (
                 "system",
-                """Based on the meeting transcript, generate a short
-professional meeting title.
+                """Based on the content transcript, generate a short
+professional content title.
 
 Maximum 8 words.
 

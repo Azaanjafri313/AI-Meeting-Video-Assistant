@@ -26,7 +26,7 @@ def build_chain(system_prompt :str):
 
 def extract_action_items(transcript:str)->str:
     chain=build_chain(
-        """You are an expert meeting analyst. From the meeting transcript,
+        """You are an expert meeting and content analyst. From the meeting transcript,
         extract all action items. for each provide:
         -Task description 
         - Owner (who is responsible)
@@ -39,9 +39,9 @@ def extract_action_items(transcript:str)->str:
 
 def extract_questions(transcript: str) -> str:
     chain = build_chain(
-        """You are an expert meeting analyst.
+        """You are an expert meeting and content analyst.
 
-Extract all important questions and unresolved questions from the meeting transcript.
+Extract all important questions and unresolved questions from the meeting or content transcript.
 
 For each question, provide:
 - Question
@@ -60,9 +60,9 @@ If no important questions are found, return "NO QUESTIONS FOUND"."""
 
 def extract_key_decisions(transcript: str) -> str:
     chain = build_chain(
-        """You are an expert meeting analyst.
+        """You are an expert meeting and content analyst.
 
-Extract all important decisions that were clearly made during the meeting.
+Extract all important decisions that were clearly made during the meeting or content discussion.
 
 For each decision, provide:
 - Decision

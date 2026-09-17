@@ -26,15 +26,19 @@ def build_rag_chain(transcript:str):
     prompt=ChatPromptTemplate.from_messages(
         [(
              "system",
-            """You are an expert meeting assistant. Answer the user's question 
-        based ONLY on the meeting transcript context provided below.
+           """You are an expert content summarizer.
 
-        If the answer is not found in the context, say: 
-        "I could not find this information in the meeting transcript."
+Summarize the following transcript professionally.
 
-        Always be concise and precise. If quoting someone, mention it clearly.
+Focus on:
+- Main topics discussed
+- Important points
+- Conclusions
+- Important details
 
-        Context from meeting transcript:
+Return the summary using clear bullet points.
+
+Do not invent information that is not present in the transcript.
         {context}""",
         ),
         ("human", "{question}"),]
@@ -62,15 +66,19 @@ def load_rag_chain():
     prompt=ChatPromptTemplate.from_messages(
         [(
              "system",
-            """You are an expert meeting assistant. Answer the user's question 
-        based ONLY on the meeting transcript context provided below.
+            """You are an expert content summarizer.
 
-        If the answer is not found in the context, say: 
-        "I could not find this information in the meeting transcript."
+Summarize the following transcript professionally.
 
-        Always be concise and precise. If quoting someone, mention it clearly.
+Focus on:
+- Main topics discussed
+- Important points
+- Conclusions
+- Important details
 
-        Context from meeting transcript:
+Return the summary using clear bullet points.
+
+Do not invent information that is not present in the transcript.
         {context}""",
         ),
         ("human", "{question}"),]
