@@ -406,7 +406,7 @@ st.markdown('<div class="input-panel-label">📎 Choose how to provide your meet
 
 input_mode = st.radio(
     "Input method",
-    ["🔗 YouTube URL", "📁 Upload File"],
+    ["📁 Upload File", "🎬 Try Sample", "🔗 YouTube URL (local runs only)"],
     horizontal=True,
     label_visibility="collapsed",
 )
@@ -414,20 +414,9 @@ input_mode = st.radio(
 source = None
 uploaded_file = None
 
-if input_mode == "🔗 YouTube URL":
-    st.caption("Note: on cloud deployments, YouTube may block downloads from server IPs. If that happens, switch to Upload File instead.")
-    input_col1, input_col2, input_col3 = st.columns([4, 1.2, 1], gap="small")
-    with input_col1:
-        source = st.text_input(
-            "YouTube URL",
-            placeholder="https://youtube.com/watch?v=...",
-            label_visibility="collapsed",
-        )
-    with input_col2:
-        language = st.selectbox("Language", ["english", "hinglish"], index=0, label_visibility="collapsed")
-    with input_col3:
-        run_btn = st.button("⚡ Analyse", use_container_width=True)
-else:
+SAMPLE_FILE_PATH = os.path.join("assets", "sample_meeting.wav")
+
+if input_mode == "📁 Upload File":
     input_col1, input_col2, input_col3 = st.columns([4, 1.2, 1], gap="small")
     with input_col1:
         uploaded_file = st.file_uploader(
@@ -439,6 +428,28 @@ else:
         language = st.selectbox("Language", ["english", "hinglish"], index=0, label_visibility="collapsed", key="lang_upload")
     with input_col3:
         run_btn = st.button("⚡ Analyse", use_container_width=True, key="run_upload")
+
+elif input_mode == "🎬 Try Sample":
+    st.caption("Runs the full pipeline on a short bundled demo meeting — no upload or link needed.")
+    input_col2, input_col3 = st.columns([1.2, 1], gap="small")
+    with input_col2:
+        language = st.selectbox("Language", ["english", "hinglish"], index=0, label_visibility="collapsed", key="lang_sample")
+    with input_col3:
+        run_btn = st.button("⚡ Analyse Sample", use_container_width=True, key="run_sample")
+
+else:
+    st.caption("Note: YouTube blocks download requests from cloud server IPs, so this option is best-effort on the deployed app and reliably works only on a local run. Use Upload File or Try Sample for a guaranteed demo.")
+    input_col1, input_col2, input_col3 = st.columns([4, 1.2, 1], gap="small")
+    with input_col1:
+        source = st.text_input(
+            "YouTube URL",
+            placeholder="https://youtube.com/watch?v=...",
+            label_visibility="collapsed",
+        )
+    with input_col2:
+        language = st.selectbox("Language", ["english", "hinglish"], index=0, label_visibility="collapsed", key="lang_yt")
+    with input_col3:
+        run_btn = st.button("⚡ Analyse", use_container_width=True, key="run_yt")
 
 st.markdown('</div>', unsafe_allow_html=True)
 st.markdown("---")
@@ -456,8 +467,18 @@ if run_btn:
                 f.write(uploaded_file.getbuffer())
             source = saved_path
 
+    elif input_mode == "🎬 Try Sample":
+        if not os.path.exists(SAMPLE_FILE_PATH):
+            st.error(
+                f"Sample file not found at '{SAMPLE_FILE_PATH}'. "
+                "Add a short demo audio/video file there in the repo to enable this option."
+            )
+            source = None
+        else:
+            source = SAMPLE_FILE_PATH
+
     if not source or not str(source).strip():
-        if input_mode == "🔗 YouTube URL":
+        if input_mode == "🔗 YouTube URL (local runs only)":
             st.error("Please enter a YouTube URL.")
     else:
         st.session_state.pipeline_done = False
