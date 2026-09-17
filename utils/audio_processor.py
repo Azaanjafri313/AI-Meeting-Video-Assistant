@@ -1,30 +1,55 @@
 import yt_dlp
 from pydub import AudioSegment
 import os
+from core.deno_setup import ensure_deno
+
+
 DOWNLOAD_DIR="downloads"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+def download_youtube_audio(url: str) -> str:
 
-def download_youtube_audio(url:str)->str:
-    output_path=os.path.join(DOWNLOAD_DIR, '%(title)s.%(ext)s')
-    ydl_opts={
-        'format': 'bestaudio/best',
+    deno_path = ensure_deno()
 
-        'outtmpl': output_path,
+    output_path = os.path.join(
+        DOWNLOAD_DIR,
+        "%(title)s.%(ext)s"
+    )
 
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'wav',
-            'preferredquality': '192',
+    ydl_opts = {
+        "format": "bestaudio/best",
+
+        "outtmpl": output_path,
+
+        "postprocessors": [{
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "wav",
+            "preferredquality": "192",
         }],
-        "js_runtimes":["deno"],
-        
+
+        "js_runtimes": {
+            "deno": {
+                "path": deno_path
+            }
+        },
+
         "quiet": True,
     }
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info_dict=ydl.extract_info(url, download=True)
-        filename=ydl.prepare_filename(info_dict).replace('.webm', '.wav').replace('.m4a', '.wav').replace('.mp4', '.wav')
-        return filename
 
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+
+        info_dict = ydl.extract_info(
+            url,
+            download=True
+        )
+
+        filename = (
+            ydl.prepare_filename(info_dict)
+            .replace(".webm", ".wav")
+            .replace(".m4a", ".wav")
+            .replace(".mp4", ".wav")
+        )
+
+        return filename
 def convert_to_wav(input_file: str) -> str:
     output_file = os.path.splitext(input_file)[0] + '_converted.wav'
     audio = AudioSegment.from_file(input_file)
