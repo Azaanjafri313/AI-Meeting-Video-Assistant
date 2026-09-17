@@ -8,7 +8,7 @@
 # 1. YouTube / Audio / Video
 # ============================================================
 
-yt-dlp>=2024.4.9
+yt-dlp
 pydub>=0.25.1
 ffmpeg-python>=0.2.0
 
@@ -20,7 +20,7 @@ ffmpeg-python>=0.2.0
 openai-whisper>=20231117
 torch>=2.2.0
 torchaudio>=2.2.0
-
+torchvision>=0.17.2
 
 # ============================================================
 # 3. Translation
