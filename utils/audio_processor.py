@@ -49,7 +49,14 @@ def download_youtube_audio(url: str) -> str:
     # this file as part of the repo (private) or via a secret file mount,
     # then set the env var to that path in your app secrets.
     cookies_file = os.getenv("YTDLP_COOKIES_FILE")
+    print(f"[DEBUG] YTDLP_COOKIES_FILE = {cookies_file}")
+    print(f"[DEBUG] File exists = {os.path.exists(cookies_file) if cookies_file else False}")
     if cookies_file and os.path.exists(cookies_file):
+        with open(cookies_file, "r") as f:
+            content = f.read()
+        print(f"[DEBUG] Cookie file size = {len(content)} chars")
+        print(f"[DEBUG] Contains tabs = {'	' in content}")
+        print(f"[DEBUG] First 200 chars: {content[:200]!r}")
         ydl_opts["cookiefile"] = cookies_file
 
     try:
