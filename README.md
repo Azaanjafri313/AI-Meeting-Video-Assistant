@@ -9,7 +9,7 @@ An end-to-end AI pipeline that takes a video or audio recording and turns it int
 ## ✨ Features
 
 - **Flexible input** — upload an audio/video file directly, try a bundled sample recording, or paste a YouTube URL (local runs)
-- **Speech-to-text transcription** using OpenAI Whisper, with automatic audio chunking for long recordings
+- **Speech-to-text transcription** using OpenAI Whisper (default, runs locally with no rate limits) or Sarvam AI (`saaras:v2.5`) as an optional alternative, with automatic audio chunking for long recordings
 - **AI-generated summaries** via an LLM, using map-reduce summarization for long transcripts
 - **Automatic title generation** for each session
 - **Structured extraction** of:
@@ -27,7 +27,7 @@ An end-to-end AI pipeline that takes a video or audio recording and turns it int
 |---|---|
 | UI | Streamlit |
 | LLM | Groq (`openai/gpt-oss-20b`) via LangChain |
-| Speech-to-Text | OpenAI Whisper |
+| Speech-to-Text | OpenAI Whisper / Sarvam AI (`saaras:v2.5`) |
 | Embeddings | HuggingFace `sentence-transformers` (local, no API key required) |
 | Vector Store | ChromaDB |
 | Audio Processing | `pydub`, `ffmpeg` |
@@ -76,6 +76,7 @@ Create a `.env` file in the project root:
 
 ```env
 GROQ_API_KEY=your_groq_api_key_here
+SARVAM_API_KEY=your_sarvam_api_key_here   # optional — Sarvam's free tier has a low usage quota, so Whisper is used by default
 ```
 
 ### Run Locally
@@ -131,6 +132,13 @@ The app supports three ways to provide a video/audio for analysis:
 - **Local embeddings (HuggingFace `all-MiniLM-L6-v2`)** instead of an API-based embedding model — keeps the RAG pipeline free and avoids an extra external dependency.
 - **Graceful degradation** — title generation and per-chunk summarization failures don't crash the whole pipeline; they fall back gracefully and continue.
 - **Multiple input paths** to keep the hosted demo reliable regardless of external platform restrictions (see [Input Methods](#-input-methods) above).
+
+---
+
+## ⚠️ Known Limitations
+
+- **YouTube URL downloads** are blocked on cloud deployments due to YouTube restricting datacenter IPs — see [Input Methods](#-input-methods) above for the workaround (Upload File / Try Sample).
+- **Sarvam AI transcription** has a low free-tier usage quota and can hit rate limits quickly under repeated use. **Whisper is used as the default and primary transcription engine** for this reason; Sarvam is available as an optional alternative for Hindi/regional-language accuracy but isn't the reliable default path.
 
 ---
 
