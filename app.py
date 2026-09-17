@@ -6,9 +6,14 @@ from core.transcriber import transcribe_all
 from core.summarizer import summarize, generate_title
 from core.extractor import extract_action_items, extract_key_decisions, extract_questions
 from core.RAG_engine import build_rag_chain, ask_question
-
+import os
 load_dotenv()
-
+# ── Cookie setup for YouTube downloads on cloud ──────────────────────────
+cookies_content = os.getenv("YTDLP_COOKIES_CONTENT")
+if cookies_content:
+    with open("/tmp/cookies.txt", "w") as f:
+        f.write(cookies_content)
+    os.environ["YTDLP_COOKIES_FILE"] = "/tmp/cookies.txt"
 # ─── Page Config ────────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="AI Video Assistant",
