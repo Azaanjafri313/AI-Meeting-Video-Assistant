@@ -414,7 +414,7 @@ input_mode = st.radio(
 source = None
 uploaded_file = None
 
-SAMPLE_FILE_PATH = os.path.join("assets", "sample_meeting.wav")
+SAMPLE_FILE_PATH = os.path.join("assets", "sample_meeting.mp4")
 
 if input_mode == "📁 Upload File":
     input_col1, input_col2, input_col3 = st.columns([4, 1.2, 1], gap="small")
