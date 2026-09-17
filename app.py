@@ -11,6 +11,18 @@ load_dotenv()
 # ── Cookie setup for YouTube downloads on cloud ──────────────────────────
 cookies_content = os.getenv("YTDLP_COOKIES_CONTENT")
 if cookies_content:
+    # Agar TOML ne tabs ko spaces me convert kar diya ho, unhe wapas tabs me convert karo
+    lines = []
+    for line in cookies_content.strip().split("\n"):
+        if line.startswith("#") or not line.strip():
+            lines.append(line)
+        else:
+            # multiple spaces ko tab se replace karo
+            import re
+            fixed_line = re.sub(r' {2,}', '\t', line)
+            lines.append(fixed_line)
+    cookies_content = "\n".join(lines)
+    
     with open("/tmp/cookies.txt", "w") as f:
         f.write(cookies_content)
     os.environ["YTDLP_COOKIES_FILE"] = "/tmp/cookies.txt"
