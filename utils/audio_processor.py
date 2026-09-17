@@ -6,6 +6,7 @@ from core.deno_setup import ensure_deno
 
 DOWNLOAD_DIR="downloads"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+
 def download_youtube_audio(url: str) -> str:
 
     deno_path = ensure_deno()
