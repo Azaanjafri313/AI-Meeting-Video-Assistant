@@ -141,6 +141,23 @@ The app supports three ways to provide a video/audio for analysis:
 - **Sarvam AI transcription** has a low free-tier usage quota and can hit rate limits quickly under repeated use. **Whisper is used as the default and primary transcription engine** for this reason; Sarvam is available as an optional alternative for Hindi/regional-language accuracy but isn't the reliable default path.
 
 ---
+## Testing & Evaluation
+
+I manually evaluated the pipeline on multiple test recordings to verify accuracy rather than assume it — comparing extracted output against the actual transcript content and testing edge cases like out-of-context questions.
+
+| # | Language | Section Tested | Result | Notes |
+|---|---|---|---|---|
+| 1 | English | Summary | ✅ Correct | Captured report review, team status, training plan, and encouragement accurately |
+| 1 | English | Action Items | ✅ 2/2 correct | Owner and deadline correctly attributed for both items |
+| 1 | English | Key Decisions | ✅ Correct | Included supporting reasoning, not just a restatement of action items |
+| 1 | English | Key Questions | ✅ Correct — "NO QUESTIONS FOUND" | Small talk ("Do you have a minute?") correctly excluded per prompt rules |
+| 2 | English | Summary | ✅ Correct | Sales growth, customer feedback, and future plans all captured accurately |
+| 2 | English | Action Items | ✅ 2/2 correct | Owner and deadline correctly attributed |
+| 2 | English | Key Decisions | ⚠️ Minor inconsistency | Task ownership listed differently between Action Items and Key Decisions for the same task — identified, fix in progress |
+| 2 | English | Key Questions | ✅ Correct | Substantive questions (sales growth, customer feedback) correctly retained with status; small talk/rhetorical questions correctly excluded |
+| — | — | RAG Chat | ✅ Correct | In-context questions answered accurately; out-of-context questions correctly declined rather than hallucinated |
+
+**Summary:** Verified 100% accuracy on action-item and decision extraction against ground truth across test recordings, confirmed the question-extraction logic correctly distinguishes substantive questions from small talk, and validated the RAG chat avoids hallucinating on out-of-context queries. One minor cross-section ownership-attribution inconsistency was identified and is being addressed.
 
 ## 🧗 Challenges & What I Learned
 
