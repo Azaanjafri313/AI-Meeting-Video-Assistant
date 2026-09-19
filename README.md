@@ -116,7 +116,7 @@ The app supports three ways to provide a video/audio for analysis:
 │   ├── extractor.py            # Action items / decisions / questions extraction
 │   ├── RAG_engine.py           # RAG chain for chat-with-transcript
 │   ├── vector_store.py         # ChromaDB + HuggingFace embeddings
-│   └── deno_setup.py           # Deno runtime setup for yt-dlp
+│   
 ├── utils/
 │   └── audio_processor.py      # YouTube download, format conversion, chunking
 ├── assets/
