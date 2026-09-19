@@ -1,7 +1,6 @@
 import yt_dlp
 from pydub import AudioSegment
 import os
-from core.deno_setup import ensure_deno
 
 
 DOWNLOAD_DIR = "downloads"
@@ -12,81 +11,71 @@ class YouTubeBlockedError(Exception):
     """Raised when YouTube refuses the download (commonly a datacenter-IP block)."""
     pass
 
-
-def download_youtube_audio(url: str) -> str:
-
-    deno_path = ensure_deno()
-
-    output_path = os.path.join(
-        DOWNLOAD_DIR,
-        "%(title)s.%(ext)s"
-    )
-
+def download_youtube_audio(url :str) ->str:
+    output_path = os.path.join(DOWNLOAD_DIR, "%(title)s.%(ext)s")
     ydl_opts = {
         "format": "bestaudio/best",
-
         "outtmpl": output_path,
-
-        "postprocessors": [{
-            "key": "FFmpegExtractAudio",
-            "preferredcodec": "wav",
-            "preferredquality": "192",
-        }],
-
-        "js_runtimes": {
-            "deno": {
-                "path": deno_path
+        "postprocessors": [
+            {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "wav",
+                "preferredquality": "192",
             }
-        },
-
-        "quiet": False,
-        "verbose": True,
+        ],
+        "quiet": True,
     }
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=True)
+        filename = ydl.prepare_filename(info).replace(".webm", ".wav").replace(".m4a", ".wav")
+    return filename
 
-    # Optional cookie-based auth. Set YTDLP_COOKIES_FILE to the path of a
-    # cookies.txt exported from a real logged-in browser session (e.g. via
-    # the "Get cookies.txt LOCALLY" extension). On Streamlit Cloud, upload
-    # this file as part of the repo (private) or via a secret file mount,
-    # then set the env var to that path in your app secrets.
-    cookies_file = os.getenv("YTDLP_COOKIES_FILE")
-    print(f"[DEBUG] YTDLP_COOKIES_FILE = {cookies_file}")
-    print(f"[DEBUG] File exists = {os.path.exists(cookies_file) if cookies_file else False}")
-    if cookies_file and os.path.exists(cookies_file):
-        with open(cookies_file, "r") as f:
-            content = f.read()
-        print(f"[DEBUG] Cookie file size = {len(content)} chars")
-        print(f"[DEBUG] Contains tabs = {'	' in content}")
-        print(f"[DEBUG] First 200 chars: {content[:200]!r}")
-        ydl_opts["cookiefile"] = cookies_file
 
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
 
-            info_dict = ydl.extract_info(
-                url,
-                download=True
-            )
+    # # # Optional cookie-based auth. Set YTDLP_COOKIES_FILE to the path of a
+    # # # cookies.txt exported from a real logged-in browser session (e.g. via
+    # # # the "Get cookies.txt LOCALLY" extension). On Streamlit Cloud, upload
+    # # # this file as part of the repo (private) or via a secret file mount,
+    # # # then set the env var to that path in your app secrets.
+    # # cookies_file = os.getenv("YTDLP_COOKIES_FILE")
+    # # print(f"[DEBUG] YTDLP_COOKIES_FILE = {cookies_file}")
+    # # print(f"[DEBUG] File exists = {os.path.exists(cookies_file) if cookies_file else False}")
+    # # if cookies_file and os.path.exists(cookies_file):
+    # #     with open(cookies_file, "r") as f:
+    # #         content = f.read()
+    # #     print(f"[DEBUG] Cookie file size = {len(content)} chars")
+    # #     print(f"[DEBUG] Contains tabs = {'	' in content}")
+    # #     print(f"[DEBUG] First 200 chars: {content[:200]!r}")
+    # #     ydl_opts["cookiefile"] = cookies_file
 
-            filename = (
-                ydl.prepare_filename(info_dict)
-                .replace(".webm", ".wav")
-                .replace(".m4a", ".wav")
-                .replace(".mp4", ".wav")
-            )
+    # # try:
+    # #     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
 
-            return filename
+    # #         info_dict = ydl.extract_info(
+    # #             url,
+    # #             download=True
+    # #         )
 
-    except yt_dlp.utils.DownloadError as e:
-        msg = str(e)
-        if "403" in msg or "Forbidden" in msg:
-            raise YouTubeBlockedError(
-                "YouTube refused this download. This usually happens when the "
-                "app is running on a cloud server — YouTube blocks download "
-                "requests from datacenter IPs. Try again from a local run, "
-                "provide a cookies file (YTDLP_COOKIES_FILE), or upload the "
-                "audio/video file directly instead of a YouTube link."
-            ) from e
-        raise
+    # #         filename = (
+    # #             ydl.prepare_filename(info_dict)
+    # #             .replace(".webm", ".wav")
+    # #             .replace(".m4a", ".wav")
+    # #             .replace(".mp4", ".wav")
+    # #         )
+
+    # #         return filename
+
+    # except yt_dlp.utils.DownloadError as e:
+    #     msg = str(e)
+    #     if "403" in msg or "Forbidden" in msg:
+    #         raise YouTubeBlockedError(
+    #             "YouTube refused this download. This usually happens when the "
+    #             "app is running on a cloud server — YouTube blocks download "
+    #             "requests from datacenter IPs. Try again from a local run, "
+    #             "provide a cookies file (YTDLP_COOKIES_FILE), or upload the "
+    #             "audio/video file directly instead of a YouTube link."
+    #         ) from e
+    #     raise
 
 
 def convert_to_wav(input_file: str) -> str:

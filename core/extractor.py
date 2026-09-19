@@ -40,18 +40,26 @@ def extract_action_items(transcript:str)->str:
 def extract_questions(transcript: str) -> str:
     chain = build_chain(
         """You are an expert meeting and content analyst.
-
-Extract all important questions and unresolved questions from the meeting or content transcript.
-
+ 
+Extract ONLY substantively important questions from the meeting or content
+transcript — questions about decisions, tasks, blockers, or topics that
+matter to the outcome of the discussion.
+ 
 For each question, provide:
 - Question
 - Person who asked it (if mentioned)
-- Status or answer (if discussed, otherwise write "Unresolved")
-
+- Status: "Unresolved" if never answered in the transcript, or a brief
+  summary of the answer if it was addressed.
+ 
+Strictly EXCLUDE:
+- Small talk or pleasantries ("do you have a minute?", "how are you?")
+- Rhetorical questions
+- Any question that was answered immediately and has no lasting
+  significance to the discussion's outcome
+ 
 Do not infer missing information.
-Ignore casual or already-resolved questions.
 Format the output as a numbered list.
-If no important questions are found, return "NO QUESTIONS FOUND"."""
+If no substantively important questions are found, return "NO QUESTIONS FOUND"."""
     )
 
     return chain.invoke(transcript)
